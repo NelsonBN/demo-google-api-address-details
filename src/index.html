@@ -1,0 +1,204 @@
+<html>
+    <head>
+        <title>Google places autocomplete</title>
+    </head>
+
+    <body>
+        <table border="0" cellpadding="1" cellspacing="1" align="center">
+            <tr>
+                <td>
+                    <strong>Location:</strong>
+                </td>
+                <td width="400">
+                    <input type="text" id="location" placeholder="Enter a location" style="width: 100%;" />
+                </td>
+            </tr>
+
+
+            <tr height="30"></tr>
+
+
+            <tr>
+                <td>
+                    <strong>Address from place:</strong>
+                </td>
+                <td>
+                    <input type="text" id="addressPL" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>Address from geocoder:</strong>
+                </td>
+                <td>
+                    <input type="text" id="addressGC" style="width: 100%;" />
+                </td>
+            </tr>
+
+            <tr height="10"></tr>
+
+            <tr>
+                <td>
+                    <strong>latitude:</strong>
+                </td>
+                <td>
+                    <input type="text" id="latitude" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>longitude:</strong>
+                </td>
+                <td>
+                    <input type="text" id="longitude" style="width: 100%;" />
+                </td>
+            </tr>
+
+            <tr height="10"></tr>
+
+            <tr>
+                <td>
+                    <strong>Country name:</strong>
+                </td>
+                <td>
+                    <input type="text" id="countryName" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>Country code:</strong>
+                </td>
+                <td>
+                    <input type="text" id="countryCode" style="width: 100%;" />
+                </td>
+            </tr>
+
+            <tr height="10"></tr>
+
+            <tr>
+                <td>
+                    <strong>State:</strong>
+                </td>
+                <td>
+                    <input type="text" id="state" style="width: 100%;" />
+                </td>
+            </tr>
+            <tr>
+                <td>
+                    <strong>County:</strong>
+                </td>
+                <td>
+                    <input type="text" id="county" style="width: 100%;" />
+                </td>
+            </tr>
+
+            <tr height="10"></tr>
+
+            <tr>
+                <td>
+                    <strong>City:</strong>
+                </td>
+                <td>
+                    <input type="text" id="city" style="width: 100%;" />
+                </td>
+            </tr>
+
+            <tr>
+                <td>
+                    <strong>Post code:</strong>
+                </td>
+                <td>
+                    <input type="text" id="postCode" style="width: 100%;" />
+                </td>
+            </tr>
+        </table>
+
+        <hr/>
+        <div><strong>Results:</strong> <span id="totalComponents">0</span> components</div>
+        <pre id="results"></pre>
+
+
+        <script type="text/javascript" src="https://maps.googleapis.com/maps/api/js?libraries=places&callback=initAutocomplete&key=<APP_KEY>" async defer></script>
+        <script type="text/javascript">
+
+            function initAutocomplete()
+            {
+                var autocomplete = new google.maps.places.Autocomplete(document.getElementById('location'));
+                google.maps.event.addListener(autocomplete, 'place_changed', function ()
+                {
+                    var place = autocomplete.getPlace();
+                    document.getElementById('addressPL').value = place.formatted_address;
+
+                    var latitude = place.geometry.location.lat();
+                    var longitude = place.geometry.location.lng();
+
+                    document.getElementById('latitude').value = latitude;
+                    document.getElementById('longitude').value = longitude;
+
+                    var latlng = new google.maps.LatLng(latitude, longitude);
+
+                    var geocoder = geocoder = new google.maps.Geocoder();
+                    geocoder.geocode({ 'latLng': latlng }, function (results, status)
+                    {
+                        if (status == google.maps.GeocoderStatus.OK && results[0])
+                        {
+                            var addressComponents = results[0].address_components
+                            document.getElementById('results').innerHTML = JSON.stringify(addressComponents, null, 4);
+
+                            var length = addressComponents.length;
+                            document.getElementById('totalComponents').innerHTML = length;
+
+                            document.getElementById('addressGC').value = results[0].formatted_address;
+
+                            var country = getComponent(addressComponents, "country");
+                            document.getElementById('countryName').value = country?.long_name ?? "";
+                            document.getElementById('countryCode').value = country?.short_name ?? "";
+
+                            document.getElementById('state').value = getComponent(addressComponents, "administrative_area_level_1")?.long_name ?? "";
+                            document.getElementById('county').value = getComponent(addressComponents, "administrative_area_level_2")?.long_name ?? "";
+                            document.getElementById('city').value = getComponent(addressComponents, "locality")?.long_name ?? "";
+                            document.getElementById('postCode').value = getComponent(addressComponents, "postal_code")?.long_name ?? "";
+                        }
+                    });
+                });
+            }
+
+            function getComponent(results, type)
+            {
+                for (let index = 0; index < results.length; index++)
+                {
+                    const element = results[index];
+                    if(element.types.some(value => value.toLowerCase() == type.toLowerCase()))
+                    {
+                        return element;
+                    }
+                }
+
+                return null;
+            }
+
+            document.getElementById('location').addEventListener("focus", () =>
+            {
+                document.getElementById('location').value = "";
+
+                document.getElementById('totalComponents').innerHTML = 0;
+                document.getElementById('results').innerHTML = "";
+                document.getElementById('totalComponents').innerHTML = length;
+
+                document.getElementById('latitude').value = "";
+                document.getElementById('longitude').value = "";
+
+                document.getElementById('addressPL').value = "";
+                document.getElementById('addressGC').value = "";
+
+                document.getElementById('countryName').value = "";
+                document.getElementById('countryCode').value = "";
+
+                document.getElementById('state').value = "";
+                document.getElementById('county').value = "";
+                document.getElementById('city').value = "";
+                document.getElementById('postCode').value = "";
+            });
+        </script>
+    </body>
+</html>
